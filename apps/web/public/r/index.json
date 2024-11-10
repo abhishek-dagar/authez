@@ -1,0 +1,42 @@
+[
+  {
+    "type": "registry:form",
+    "name": "identify-and-password",
+    "link": "sign-in",
+    "files": [
+      {
+        "path": "forms/identify-and-password/sign-in/page.tsx",
+        "target": "app/sign-in/page.tsx",
+        "type": "registry:page"
+      },
+      {
+        "path": "forms/identify-and-password/sign-up/page.tsx",
+        "target": "app/sign-up/page.tsx",
+        "type": "registry:page"
+      },
+      {
+        "path": "forms/identify-and-password/sign-in/sign-in-form.tsx",
+        "type": "registry:component",
+        "target": "components/forms/identify-and-password/sign-in-form.tsx"
+      },
+      {
+        "path": "forms/identify-and-password/sign-up/sign-up-form.tsx",
+        "type": "registry:component",
+        "target": "components/forms/identify-and-password/sign-up-form.tsx"
+      }
+    ]
+  },
+  {
+    "type": "registry:form",
+    "name": "sign-up",
+    "link": "sign-up",
+    "files": [
+      {
+        "path": "forms/identify-and-password/sign-up/page.tsx",
+        "target": "app/sign-up/page.tsx",
+        "type": "registry:page"
+      }
+    ],
+    "isDummy": true
+  }
+]

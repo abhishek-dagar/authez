@@ -1,0 +1,12 @@
+{
+  "providers": [
+    {
+      "name": "ProviderGoogle",
+      "file": "google"
+    },
+    {
+      "name": "ProviderGitHub",
+      "file": "github"
+    }
+  ]
+}

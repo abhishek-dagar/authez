@@ -1,0 +1,99 @@
+---
+title: Google Provider
+description: Configure your authentication providers here. For Google, create a Google provider configuration using clientId and clientSecret. You can add other providers in this file as needed.
+---
+
+# Configure Google
+
+[Google console](https://console.cloud.google.com/apis/credentials) to create a Google OAuth 2.0 client ID and client secret.
+
+The "Authorized redirect URIs" used when creating the credentials must include your full domain and end in the callback path. For example;
+
+#### For production:
+
+<Callout>https://{"{YOUR_DOMAIN}"}/api/auth/callback/google</Callout>
+
+#### For development:
+
+<Callout>http://localhost:3000/api/auth/callback/google</Callout>
+
+<Tabs defaultValue="cli">
+
+<TabsList>
+
+  <TabsTrigger value="cli">CLI</TabsTrigger>
+  <TabsTrigger value="manual">Manual</TabsTrigger>
+</TabsList>
+
+<TabsContent value="cli">
+  <Steps>
+  ### Installation
+
+To add the Google provider, run the following command:
+
+```bash
+npm authez add -p google
+```
+
+### Usage
+
+Get the Sign in function
+
+```tsx
+import { SignIn } from "@/lib/auth";
+```
+
+Call sign in function by passing the provider name as Google
+
+```tsx
+<button onClick={() => SignIn("google")}>Sign in with Google</button>
+```
+
+  </Steps>
+</TabsContent>
+
+<TabsContent value="manual">
+<Steps>
+
+### Add Google providers
+
+Configure your authentication providers here. For Google, create a Google provider configuration using clientId and clientSecret. You can add other providers in this file as needed.
+
+```ts title="lib/auth/providers/google.tsx"
+import GoogleProvider from "next-auth/providers/google";
+
+const ProviderGoogle = GoogleProvider({
+  clientId: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+});
+
+export default ProviderGoogle;
+```
+
+### Set Env Variables
+
+Add your Google OAuth credentials and other required environment variables. These variables enable authentication services to function correctly.
+
+```bash title=".env.local"
+GOOGLE_CLIENT_ID="client Id"
+GOOGLE_CLIENT_SECRET="client secret"
+```
+
+### Add to Auth options
+
+Add your Google provider configuration to authOptions. This ensures that NextAuth knows how to handle Google authentication.
+
+```json title="lib/auth/providers.json"
+{
+  "providers": [
+    //...
+    { "name": "ProviderGoogle", "file": "google" }
+    //...
+  ]
+}
+```
+
+</Steps>
+</TabsContent>
+
+</Tabs>

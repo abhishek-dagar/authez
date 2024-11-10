@@ -1,0 +1,21 @@
+{
+  "providers": [
+    { "name": "ProviderGoogle", "file": "google" },
+    { "name": "ProviderGitHub", "file": "github" }
+  ],
+  "files": [
+    { "filename": "index.ts", "folder": "lib/auth" },
+    { "filename": "options.ts", "folder": "lib/auth" },
+    { "filename": "providers.json", "folder": "lib/auth" },
+    { "filename": "next-auth.d.ts", "folder": "lib/auth" },
+    { "filename": "AuthProvider.tsx", "folder": "lib/auth" },
+    { "filename": "google.tsx", "folder": "lib/auth/providers" },
+    { "filename": "route.ts", "folder": "app/api/auth/[...nextauth]" },
+    { "filename": ".env.local", "folder": "", "isEnv": true }
+  ],
+  "folders": [
+    "src/lib/auth",
+    "src/lib/auth/providers",
+    "src/app/api/auth/[...nextauth]"
+  ]
+}

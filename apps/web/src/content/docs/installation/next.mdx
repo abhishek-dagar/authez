@@ -1,0 +1,263 @@
+---
+title: Manual Installation
+description: Add dependencies to your project manually.
+---
+
+<Tabs defaultValue="cli">
+
+<TabsList>
+
+  <TabsTrigger value="cli">CLI</TabsTrigger>
+  <TabsTrigger value="manual">Manual</TabsTrigger>
+</TabsList>
+
+<TabsContent value="cli">
+<Steps>
+### Intsall dev dependencies
+
+To get started with authentication, add the authez package to your project by running the following command:
+
+```bash
+yarn add -D authez
+```
+
+### Initialize project
+
+Initialize your project by running the following command:
+
+```bash
+yarn authez init
+```
+
+### Add Provider
+
+Add the AuthProvider into the Layout.tsx file.
+
+```tsx title="app/layout.tsx"
+<AuthProvider>{children}</AuthProvider>
+```
+
+</Steps>
+</TabsContent>
+<TabsContent value="manual">
+<Steps>
+
+### Add dependencies
+
+To get started with authentication, add the NextAuth package to your project by running the following command:
+
+```bash
+npm install next-auth
+```
+
+### Set Auth Options
+
+Define your authentication options in authOptions. Here, you configure providers (such as Google or credentials), specify a session strategy, and handle authentication callbacks for sign-in, JWT, and session management.
+
+```ts title="lib/auth/options.ts"
+import { NextAuthOptions } from "next-auth";
+import providersConfig from "./providers.json";
+
+// Define the authOptions without providers initially
+export const authOptions: NextAuthOptions = {
+  providers: [],
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async signIn({ user, account }) {
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if (user) {
+        delete user["password"];
+        token = { ...user };
+        return token;
+      }
+      return token;
+    },
+    async session({ session, token }: any) {
+      if (session.user && token) {
+        session.user = token;
+      }
+      return session;
+    },
+  },
+};
+
+// Function to add providers dynamically based on providers.json
+(async function addProviders() {
+  const providers = await Promise.all(
+    providersConfig.providers.map(async (provider) => {
+      const { default: ProviderName } = await import(
+        `./providers/${provider.file}`
+      );
+
+      return ProviderName;
+    })
+  );
+
+  // Assign the dynamically loaded providers to authOptions
+  authOptions.providers = providers;
+})();
+```
+
+### Add Providers to Auth Options
+
+Add your providers to authOptions. This ensures that NextAuth knows how to handle authentication.
+
+```json title="lib/auth/providers.json"
+{
+  "providers": [{ "name": "ProviderGoogle", "file": "google" }]
+}
+```
+
+### Add Auth types
+
+Extend NextAuth's types to ensure type safety throughout your authentication setup. This includes custom types for session, JWT, and user details (such as role, first name, and last name).
+
+```ts title="lib/auth/next-auth.d.ts"
+import NextAuth from "next-auth";
+import type { User } from "next-auth";
+import "next-auth/jwt";
+
+declare module "next-auth/jwt" {
+  interface JWT extends User {}
+}
+
+declare module "next-auth" {
+  interface Session {
+    user: User & DefaultSession["user"];
+  }
+
+  interface User {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    password?: string;
+  }
+}
+```
+
+### Add Auth Functions
+
+Create utility functions for authentication, including SignIn and SignOut for handling login and logout, useClientUser for accessing user data on the client, and GetServerUser to access user data on the server.
+
+```ts title="lib/auth/index.ts"
+import { getServerSession } from "next-auth";
+import { BuiltInProviderType } from "next-auth/providers/index";
+import {
+  LiteralUnion,
+  signIn,
+  SignInAuthorizationParams,
+  SignInOptions,
+  signOut,
+  useSession,
+} from "next-auth/react";
+import React from "react";
+import { authOptions } from "./options";
+
+export const SignIn = async (
+  provider?: LiteralUnion<BuiltInProviderType> | undefined,
+  options?: SignInOptions,
+  authorizationParams?: SignInAuthorizationParams
+) => {
+  await signIn(provider, options, authorizationParams);
+};
+
+export const SignOut = async () => {
+  await signOut();
+};
+
+export function useClientUser() {
+  const [user, setUser] = React.useState();
+  const { data: session } = useSession();
+
+  React.useEffect(() => {
+    if (session) {
+      setUser(session.user as any);
+    }
+  }, [session]);
+
+  return user;
+}
+
+export async function GetSeverUser() {
+  const session = await getServerSession(authOptions);
+  return session?.user;
+}
+```
+
+### Add Session Provider
+
+Wrap your application with the SessionProvider component to give components access to authentication data, such as the user's session. This provider enables use of NextAuth hooks, like useSession.
+
+```ts title="lib/auth/AuthProviders.tsx"
+"use client";
+import { SessionProvider, SessionProviderProps } from "next-auth/react";
+
+interface AuthProvidersProps extends SessionProviderProps {}
+
+export default function AuthProviders({
+  children,
+  ...props
+}: AuthProvidersProps) {
+  return <SessionProvider {...props}>{children}</SessionProvider>;
+}
+```
+
+### Wrap you App
+
+Wrap your application with the AuthProviders component to provide authentication to components. This component is used in the app/layout.tsx file.
+
+```ts title="app/layout.tsx"
+<AuthProviders>{children}</AuthProviders>
+```
+
+### Add Google and other providers
+
+Configure your authentication providers here. For Google, create a Google provider configuration using clientId and clientSecret. You can add other providers in this file as needed.
+
+```ts title="lib/auth/providers/index.ts"
+import GoogleProvider from "next-auth/providers/google";
+
+export const ProviderGoogle = GoogleProvider({
+  clientId: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+});
+```
+
+### Set Env Variables
+
+Add your Google OAuth credentials and other required environment variables. These variables enable authentication services to function correctly.
+
+```bash title=".env.local"
+GOOGLE_CLIENT_ID="client Id"
+GOOGLE_CLIENT_SECRET="client secret"
+REDIRECT_URI=http://localhost:3000/api/auth/callback
+NEXTAUTH_SECRET="NEXTAUTH_SECRET"
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### Create Route Handler
+
+Set up your authentication route in Next.js. This handler file configures the API route for NextAuth, enabling endpoints for user authentication.
+
+```ts title="app/api/auth/[...nextauth]/route.ts"
+import { authOptions } from "@/lib/auth/options";
+import NextAuth from "next-auth/next";
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
+```
+
+### That's it
+
+You can now start adding components to your project.
+
+</Steps>
+</TabsContent>
+
+</Tabs>
